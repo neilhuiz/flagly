@@ -10,90 +10,26 @@
         private const string DefaultConfigurationSection = "featureFlags";
 
         /// <summary>
-        /// Adds feature flags based on configuration.
+        /// Adds the the feature flags services and their dependencies.
         /// </summary>
         /// <param name="services"></param>
+        /// <param name="cancellationSource"></param>
         /// <param name="config"></param>
+        /// <param name="configOptions"></param>
         /// <returns></returns>
         public static IServiceCollection AddFeatureFlags(
                 this IServiceCollection services,
-                IConfigurationRoot config
-            ) {
-
-            return services.AddFeatureFlags(
-                config.CreateCancellationToken(),
-                config.GetSection(DefaultConfigurationSection)
-            );
-        }
-
-        public static IServiceCollection AddFeatureFlags(
-                this IServiceCollection services,
-                Action<FeatureFlagOptions> configOptions
-            ) {
-
-            return services.AddFeatureFlags(new CancellationTokenSource(), configOptions);
-        }
-
-        public static IServiceCollection AddFeatureFlags(
-                this IServiceCollection services,
-                IConfiguration config
-            ) {
-
-            return services.AddFeatureFlags(new CancellationTokenSource(), config);
-        }
-
-        public static IServiceCollection AddFeatureFlags(
-                this IServiceCollection services,
-                IConfiguration config,
-                Action<FeatureFlagOptions> configOptions
-            ) {
-
-            return services.AddFeatureFlags(new CancellationTokenSource(), config, configOptions);
-        }
-
-        public static IServiceCollection AddFeatureFlags(
-                this IServiceCollection services,
-                CancellationTokenSource cancellationSource
-            ) {
-
-            return services.AddFeatureFlags(cancellationSource, null, null);
-        }
-
-        public static IServiceCollection AddFeatureFlags(
-                this IServiceCollection services,
-                CancellationTokenSource cancellationSource,
-                IConfiguration config                
-            ) {
-
-            return services.AddFeatureFlags(cancellationSource, config, null);
-        }
-
-        public static IServiceCollection AddFeatureFlags(
-                this IServiceCollection services,
-                CancellationTokenSource cancellationSource,
-                Action<FeatureFlagOptions> configOptions
-            ) {
-
-            return services.AddFeatureFlags(cancellationSource, null, configOptions);
-        }
-
-        public static IServiceCollection AddFeatureFlags(
-                this IServiceCollection services,
                 CancellationTokenSource cancellationSource,
                 IConfiguration config,
                 Action<FeatureFlagOptions> configOptions
             ) {
 
-            if(cancellationSource == null) { throw new ArgumentNullException(nameof(cancellationSource)); }
-
-            if (config != null) { services.Configure<FeatureFlagOptions>(config); }
-
-            services.PostConfigure<FeatureFlagOptions>(o => {
-                configOptions?.Invoke(o);
-                o.TokenSource = cancellationSource;
-            });
-
-            return services.AddScoped<IFeatureFlagsProvider>();
+            return services.Configure<FeatureFlagOptions>(config)
+                .PostConfigure<FeatureFlagOptions>(o => {
+                    configOptions.Invoke(o);
+                    o.TokenSource = cancellationSource;
+                })
+                .AddScoped<IFeatureFlagsProvider>();
         }
     }
 }
